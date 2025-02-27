@@ -128,35 +128,18 @@ public class MainActivity extends AppCompatActivity implements AdvancedWebView.L
 
     @Override
     public void onDownloadRequested(
-            String url,
-            String suggestedFilename,
-            String mimeType,
-            long contentLength,
-            String contentDisposition,
-            String userAgent
+            final String url,
+            final String suggestedFilename,
+            final String mimeType,
+            long contentLength, String contentDisposition, String userAgent
     ) {
         try {
-            // Use Android's DownloadManager
-            DownloadManager downloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
-            Uri uri = Uri.parse(url);
-
-            DownloadManager.Request request = new DownloadManager.Request(uri);
-            request.setMimeType(mimeType);
-
-            // Set file destination
-            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, suggestedFilename);
-
-            // Set notifications
-            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-            request.setTitle(suggestedFilename);
-
-            // Enqueue the download request
-            if (downloadManager != null) {
-                downloadManager.enqueue(request);
-                Toast.makeText(this, "Downloading.. " + suggestedFilename, Toast.LENGTH_SHORT).show();
+            // For non-blob URLs, use AdvancedWebView's default download handler.
+            if (AdvancedWebView.handleDownload(this, url, suggestedFilename)) {
+                Toast.makeText(this, "Downloading", Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
-            Toast.makeText(this, "Download Failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
