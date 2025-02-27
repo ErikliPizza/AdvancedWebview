@@ -10,6 +10,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.ActivityNotFoundException;
 import android.os.Environment;
 import android.view.View;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 
@@ -18,6 +20,7 @@ import im.delight.android.webview.AdvancedWebView;
 public class MainActivity extends AppCompatActivity implements AdvancedWebView.Listener {
     private AdvancedWebView mWebView;
 
+    @SuppressLint("SetJavaScriptEnabled")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,10 +32,27 @@ public class MainActivity extends AppCompatActivity implements AdvancedWebView.L
 
         mWebView = (AdvancedWebView) findViewById(R.id.webview);
         mWebView.setListener(this, this);
+        mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.setMixedContentAllowed(false);
+        mWebView.addJavascriptInterface(new WebAppInterface(this), "AndroidInterface");
         mWebView.loadUrl("https://github.com/ErikliPizza", preventCaching);
         mWebView.addPermittedHostname("github.com");
-
+        // Add this WebViewClient to intercept image clicks and force downloads
+        mWebView.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                // Check if the URL ends with an image extension
+                if (url.matches(".*\\.(png|jpe?g|gif)$")) {
+                    // Force download of the image
+                    String fileName = url.substring(url.lastIndexOf('/') + 1);
+                    if (AdvancedWebView.handleDownload(MainActivity.this, url, fileName)) {
+                        Toast.makeText(MainActivity.this, "Downloading " + fileName, Toast.LENGTH_SHORT).show();
+                    }
+                    return true; // Prevent the webview from loading the image
+                }
+                return false; // For other URLs, let the webview handle them as usual
+            }
+        });
         // ...
     }
 
